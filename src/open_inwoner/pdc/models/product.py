@@ -11,7 +11,10 @@ from filer.fields.image import FilerImageField
 from openformsclient.models import OpenFormsSlugField
 from ordered_model.models import OrderedModel
 
-from open_inwoner.openproducten.mixins import OpenProductenMixin
+from open_inwoner.openproducten.mixins import (
+    OpenProductenMixin,
+    OpenProductenProductTypeMixin,
+)
 from open_inwoner.utils.validators import DutchPhoneNumberValidator
 
 from ..managers import ProductQueryset
@@ -36,7 +39,7 @@ class CategoryProduct(OrderedModel):
     get_product_name.short_description = _("Name")
 
 
-class Product(OpenProductenMixin):
+class Product(OpenProductenProductTypeMixin):
     name = models.CharField(
         verbose_name=_("Name"), max_length=100, help_text=_("Name of the product")
     )

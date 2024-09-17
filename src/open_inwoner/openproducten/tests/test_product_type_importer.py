@@ -1,3 +1,5 @@
+from datetime import date
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -13,11 +15,13 @@ from open_inwoner.pdc.tests.factories import (
 )
 
 from ..api_models import BaseCategory
+from ..models import Price, PriceOption
 from .helpers import (
     _create_condition,
     _create_file,
     _create_file_object,
     _create_link,
+    _create_price,
     _create_product_type,
     _create_question,
     _create_tag,
@@ -167,6 +171,42 @@ class TestProductTypeImporter(TestCase):
 
                 # Subtest does not reset db
                 pdc_models.ProductFile.objects.all().delete()
+
+    def test_update_or_create_price(self):
+        for create in (True, False):
+            with self.subTest(
+                "should create instance if uuid does not exist"
+                if create
+                else "should update instance if uuid exists"
+            ):
+                uuid = uuid4()
+
+                product = ProductFactory()
+
+                if not create:
+                    Price.objects.create(
+                        open_producten_uuid=uuid,
+                        valid_from=date.today(),
+                        product_type=product,
+                    )
+
+                price = _create_price(uuid)
+
+                importer = ProductTypeImporter(self.client)
+                importer._update_or_create_price(price, product)
+
+                instance = Price.objects.first()
+
+                self.assertEqual(Price.objects.count(), 1)
+                self.assertEqual(PriceOption.objects.count(), 1)
+                self.assertEqual(instance.open_producten_uuid, uuid)
+                self.assertEqual(
+                    instance.options.first().amount, Decimal(price.options[0].amount)
+                )
+
+                # Subtest does not reset db
+                PriceOption.objects.all().delete()
+                Price.objects.all().delete()
 
     def test_update_or_create_product_type(self):
         for create in (True, False):

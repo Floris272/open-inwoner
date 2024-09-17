@@ -3,6 +3,7 @@ import logging
 from django.db import transaction
 from django.utils.text import slugify
 
+from open_inwoner.openproducten.models import Price, PriceOption
 from open_inwoner.pdc.models import (
     Category,
     Product as ProductType,
@@ -144,7 +145,8 @@ class ProductTypeImporter(OpenProductenImporter):
         for file in product_type.files:
             self._update_or_create_file(file, product_type_instance)
 
-        # TODO prices set current price or add everything to content.
+        for price in product_type.prices:
+            self._update_or_create_price(price, product_type_instance)
 
     def _update_or_create_tag_type(self, tag_type):
         tag_type_instance, created = TagType.objects.update_or_create(
@@ -222,13 +224,38 @@ class ProductTypeImporter(OpenProductenImporter):
             created = True
         self._add_to_log_list(file_instance, created)
 
+    def _update_or_create_price(self, price, product_type_instance):
+        price_instance, created = Price.objects.update_or_create(
+            open_producten_uuid=price.id,
+            defaults={
+                "open_producten_uuid": price.id,
+                "valid_from": price.valid_from,
+                "product_type": product_type_instance,
+            },
+        )
+        self._add_to_log_list(price_instance, created)
+        for option in price.options:
+            self._update_or_create_price_option(option, price_instance)
+
+    def _update_or_create_price_option(self, price_option, price_instance):
+        price_option_instance, created = PriceOption.objects.update_or_create(
+            open_producten_uuid=price_option.id,
+            defaults={
+                "open_producten_uuid": price_option.id,
+                "description": price_option.description,
+                "amount": price_option.amount,
+                "price": price_instance,
+            },
+        )
+        self._add_to_log_list(price_option_instance, created)
+
     def _update_or_create_product_type(self, product_type):
         icon_object = self.client.get_image(product_type.icon)
         image_object = self.client.get_image(product_type.image)
 
         data = {
             "open_producten_uuid": product_type.id,
-            "name": product_type.name,  # TODO + " (Open Producten)" ?
+            "name": product_type.name,
             "slug": slugify(product_type.name),
             "published": product_type.published,
             "summary": product_type.summary,

@@ -1,3 +1,4 @@
+from datetime import date
 from uuid import uuid4
 
 from django.core.files import File as DjangoFile
@@ -10,6 +11,8 @@ from open_inwoner.openproducten.api_models import (
     Condition,
     File,
     Link,
+    Price,
+    PriceOption,
     ProductType,
     Question,
     Tag,
@@ -86,4 +89,20 @@ def _create_category(uuid):
         image=None,
         parent_category=None,
         questions=[],
+    )
+
+
+def _create_price_option(uuid):
+    return PriceOption(
+        id=uuid,
+        amount="10",
+        description="description",
+    )
+
+
+def _create_price(uuid):
+    return Price(
+        id=uuid,
+        valid_from=date.today(),
+        options=[_create_price_option(uuid4()).__dict__],
     )
