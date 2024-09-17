@@ -3,6 +3,7 @@ import logging
 from django.core.files import File as DjangoFile
 from django.core.files.temp import NamedTemporaryFile
 
+import requests
 from ape_pie.client import APIClient
 from filer.models.filemodels import File
 from filer.models.imagemodels import Image
@@ -45,11 +46,8 @@ class OpenProductenClient(APIClient):
 
     def _fetch_file(self, url) -> DjangoFile | None:
         try:
-            # TODO APIClient checks if url starts with same base url.
-            old_base_url = self.base_url
-            self.base_url = url.split("media")[0]
-            response = self.get(url)
-            self.base_url = old_base_url
+            # APIClient checks if base url is the same
+            response = requests.get(url)
 
             temp_file = NamedTemporaryFile(delete=True)
             temp_file.write(response.content)
