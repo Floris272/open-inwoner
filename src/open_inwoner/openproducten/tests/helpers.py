@@ -124,15 +124,17 @@ def create_complete_product_type(name):
 
 
 def get_all_product_type_objects():
-    return [
-        pdc_models.ProductCondition.objects.first(),
-        pdc_models.Tag.objects.first(),
-        pdc_models.TagType.objects.first(),
-        pdc_models.ProductLink.objects.first(),
-        op_models.Price.objects.first(),
-        op_models.PriceOption.objects.first(),
-        pdc_models.Question.objects.first(),
-    ] + list(pdc_models.Product.objects.all())
+    return (
+        list(pdc_models.ProductCondition.objects.all())
+        + list(pdc_models.Tag.objects.all())
+        + list(pdc_models.TagType.objects.all())
+        + list(pdc_models.ProductLink.objects.all())
+        + list(pdc_models.ProductFile.objects.all())
+        + list(op_models.Price.objects.all())
+        + list(op_models.PriceOption.objects.all())
+        + list(pdc_models.Question.objects.all())
+        + list(pdc_models.Product.objects.all())
+    )
 
 
 def create_complete_category(name):
@@ -142,6 +144,6 @@ def create_complete_category(name):
 
 
 def get_all_category_objects():
-    return [
-        pdc_models.Question.objects.first(),
-    ] + list(pdc_models.Category.objects.all())
+    return list(pdc_models.Question.objects.all()) + list(
+        pdc_models.Category.objects.all()
+    )

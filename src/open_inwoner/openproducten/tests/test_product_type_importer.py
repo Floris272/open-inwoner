@@ -506,8 +506,8 @@ class TestProductTypeImporter(TestCase):
         self.assertEqual(updated, [])
         self.assertEqual(deleted, 0)
         self.assertEqual(
-            sorted([obj.open_producten_uuid for obj in created]),
-            sorted([obj.open_producten_uuid for obj in all_objects]),
+            sorted({obj.open_producten_uuid for obj in created}),
+            sorted({obj.open_producten_uuid for obj in all_objects}),
         )
 
     def test_complete_import_with_existing_objects(self):
@@ -519,28 +519,27 @@ class TestProductTypeImporter(TestCase):
             product_type,
             related_product_type,
         ]
-        importer = ProductTypeImporter(self.client)
-        importer.import_producttypes()
 
-        importer = ProductTypeImporter(self.client)
-        created, updated, deleted = importer.import_producttypes()
+        for _ in range(2):
+            importer = ProductTypeImporter(self.client)
+            created, updated, deleted = importer.import_producttypes()
 
-        self.assertEqual(pdc_models.Product.objects.count(), 2)
-        self.assertEqual(pdc_models.ProductCondition.objects.count(), 1)
-        self.assertEqual(pdc_models.Tag.objects.count(), 1)
-        self.assertEqual(pdc_models.TagType.objects.count(), 1)
-        self.assertEqual(pdc_models.ProductLink.objects.count(), 1)
-        self.assertEqual(Price.objects.count(), 1)
-        self.assertEqual(PriceOption.objects.count(), 1)
-        self.assertEqual(pdc_models.Question.objects.count(), 1)
+            self.assertEqual(pdc_models.Product.objects.count(), 2)
+            self.assertEqual(pdc_models.ProductCondition.objects.count(), 1)
+            self.assertEqual(pdc_models.Tag.objects.count(), 1)
+            self.assertEqual(pdc_models.TagType.objects.count(), 1)
+            self.assertEqual(pdc_models.ProductLink.objects.count(), 1)
+            self.assertEqual(Price.objects.count(), 1)
+            self.assertEqual(PriceOption.objects.count(), 1)
+            self.assertEqual(pdc_models.Question.objects.count(), 1)
 
         all_objects = get_all_product_type_objects()
 
         self.assertEqual(created, [])
         self.assertEqual(deleted, 0)
         self.assertEqual(
-            sorted([obj.open_producten_uuid for obj in updated]),
-            sorted([obj.open_producten_uuid for obj in all_objects]),
+            sorted({obj.open_producten_uuid for obj in updated}),
+            sorted({obj.open_producten_uuid for obj in all_objects}),
         )
 
     def test_complete_import_without_objects(self):
@@ -548,16 +547,16 @@ class TestProductTypeImporter(TestCase):
         product_type = create_complete_product_type("test2")
         product_type.related_product_types.append(related_product_type.id)
 
-        self.client.fetch_producttypes_no_cache.return_value = [
-            product_type,
-            related_product_type,
-        ]
-        importer = ProductTypeImporter(self.client)
-        importer.import_producttypes()
-
-        self.client.fetch_producttypes_no_cache.return_value = []
-        importer = ProductTypeImporter(self.client)
-        created, updated, deleted = importer.import_producttypes()
+        for return_value in (
+            [
+                product_type,
+                related_product_type,
+            ],
+            [],
+        ):
+            self.client.fetch_producttypes_no_cache.return_value = return_value
+            importer = ProductTypeImporter(self.client)
+            created, updated, deleted = importer.import_producttypes()
 
         self.assertEqual(created, [])
         self.assertEqual(updated, [])
