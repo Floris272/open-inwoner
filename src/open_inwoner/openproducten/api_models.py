@@ -129,7 +129,6 @@ class ProductType(Model):
     summary: str
     icon: Optional[str]
     image: Optional[str]
-    form_link: str
     open_forms_slug: str
     content: str
     keywords: list[str]
